@@ -14,5 +14,8 @@
     "aws-sdk": "^2.167.0",
     "express": "^4.16.2",
     "ws": "^3.3.2"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2"
   }
 }

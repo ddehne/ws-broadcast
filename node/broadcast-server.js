@@ -2,11 +2,14 @@ const app = require('express')();
 const http = require('http');
 const WebSocket = require('ws');
 const server = http.createServer(app);
+const bodyParser = require("body-parser");
 const wss = new WebSocket.Server({ server });
 const AWS = require('aws-sdk');
 const sns = new AWS.SNS({
                         accessKeyId: 'insert_access_key', secretAccessKey: 'insert_secret', region: 'insert_region'
                     });
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(function(req, res, next){
     if (req.is('text/*')) {
@@ -31,8 +34,8 @@ app.post('/broadcast', function (req, res) {
           TopicArn: req.headers['x-amz-sns-topic-arn']
         };
      }
-    console.log(req.connection.remoteAddress);
-    broadcast(JSON.parse(req.text)['Message']);
+    console.log(`received message: ${req.body}`);
+    broadcast(req.body.message);
     res.send('POST request to the homepage');
 });
 
