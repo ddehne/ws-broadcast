@@ -8,8 +8,6 @@ const AWS = require('aws-sdk');
 const sns = new AWS.SNS({
                         accessKeyId: 'insert_access_key', secretAccessKey: 'insert_secret', region: 'insert_region'
                     });
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 app.use(function(req, res, next){
     if (req.is('text/*')) {
@@ -22,6 +20,9 @@ app.use(function(req, res, next){
     }
 });
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/client.html');
 });
@@ -29,13 +30,11 @@ app.get('/', function(req, res){
 app.post('/broadcast', function (req, res) {
     if(req.headers['x-amz-sns-message-type'] === 'SubscriptionConfirmation'){
         console.log(JSON.parse(req.text)['Token']);
-        var params = {
-          Token: JSON.parse(req.text)['Token'],
-          TopicArn: req.headers['x-amz-sns-topic-arn']
-        };
      }
-    console.log(`received message: ${req.body}`);
-    broadcast(req.body.message);
+
+    const body = req.headers['x-amz-sns-message-type'] ? JSON.parse(req.text) : req.body;
+    console.log(`received message: ${body.Message}`);
+    broadcast(body.Message);
     res.send('POST request to the homepage');
 });
 
@@ -49,15 +48,14 @@ wss.on('connection', function connection(ws) {
   ws.send('Connection received');
 });
 
-function broadcast(data) {
-    console.log("broadcasting to all clients");
-    wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(data);
-        }
-    });
-}
-
+    function broadcast(data) {
+        console.log("broadcasting to all clients");
+        wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(data);
+            }
+        });
+    }
 
 server.listen(8080, function(){
     console.log('server on *:8080');
